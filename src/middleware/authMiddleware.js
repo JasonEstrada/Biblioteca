@@ -16,13 +16,15 @@ const verificarPermiso = (permisoRequerido) => {
       // Verificar el token usando la clave secreta
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
+        const permisos = Array.isArray(decoded.permiso) ? decoded.permiso : [];
+
       // Verificar si el usuario tiene el permiso requerido
-      if (decoded.permiso !== permisoRequerido) {
+      if (!permisos || !permisos.includes(permisoRequerido)) {
         return res.status(403).json({ message: 'No tienes permisos para realizar esta acción.' });
       }
 
       // Si tiene el permiso, permitir continuar con la solicitud
-      req.user = decoded;  
+      req.user = decoded;
       next();
     } catch (error) {
       console.error(error);
@@ -30,6 +32,7 @@ const verificarPermiso = (permisoRequerido) => {
     }
   };
 };
+
 
 // Middleware para verificar el token JWT
 const verificarToken = (req, res, next) => {
