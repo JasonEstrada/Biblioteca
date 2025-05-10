@@ -11,11 +11,19 @@ const { obtenerHistorialReservasAction } = require("../actions/libros/obtenerHis
 const crearLibro = async (req, res) => {
   const { titulo, autor, genero, editorial, fecha_publicacion } = req.body;
 
+  // Verificar si el usuario tiene el permiso adecuado para crear libros
+  const permisos = Array.isArray(req.user.permiso) ? req.user.permiso : [];
+
+  // Verificar si el usuario tiene el permiso para crear libros
+  if (!permisos.includes("crear_libro") && !permisos.includes("admin")) {
+    return res.status(403).json({
+      message: "No tienes permisos para crear un libro.",
+    });
+  }
+
   // Validar que todos los campos estén presentes
   if (!titulo || !autor || !genero || !editorial || !fecha_publicacion) {
-    return res
-      .status(400)
-      .json({ message: "Todos los campos son obligatorios" });
+    return res.status(400).json({ message: "Todos los campos son obligatorios" });
   }
 
   try {
@@ -35,9 +43,7 @@ const crearLibro = async (req, res) => {
     res.status(201).json({ message: "Libro creado con éxito", id: result.id });
   } catch (error) {
     console.error("Error al crear el libro:", error);
-    res
-      .status(500)
-      .json({ message: "Error en el servidor, intente más tarde." });
+    res.status(500).json({ message: "Error en el servidor, intente más tarde." });
   }
 };
 
@@ -99,6 +105,16 @@ const actualizarLibro = async (req, res) => {
     disponibilidad,
   } = req.body;
 
+  // Verificar los permisos del usuario
+  const permisos = Array.isArray(req.user.permiso) ? req.user.permiso : [];
+
+  // Verificar si el usuario tiene el permiso adecuado para modificar libros
+  if (!permisos.includes("modificar_libro") && !permisos.includes("admin")) {
+    return res.status(403).json({
+      message: "No tienes permisos para modificar este libro.",
+    });
+  }
+
   try {
     // Delegar la lógica de actualización del libro a la acción correspondiente
     const result = await actualizarLibroAction(
@@ -128,6 +144,16 @@ const actualizarLibro = async (req, res) => {
 const inhabilitarLibro = async (req, res) => {
   const { id } = req.params; // ID del libro a inhabilitar
 
+  // Verificar los permisos del usuario
+  const permisos = Array.isArray(req.user.permiso) ? req.user.permiso : [];
+
+  // Verificar si el usuario tiene el permiso adecuado para inhabilitar libros
+  if (!permisos.includes("inhabilitar_libro") && !permisos.includes("admin")) {
+    return res.status(403).json({
+      message: "No tienes permisos para inhabilitar este libro.",
+    });
+  }
+
   try {
     // Delegar la lógica de inhabilitación del libro a la acción correspondiente
     const result = await inhabilitarLibroAction(id);
@@ -139,15 +165,24 @@ const inhabilitarLibro = async (req, res) => {
     res.status(200).json({ message: "Libro inhabilitado con éxito" });
   } catch (error) {
     console.error("Error al inhabilitar el libro:", error);
-    res
-      .status(500)
-      .json({ message: "Error en el servidor, intente más tarde." });
+    res.status(500).json({ message: "Error en el servidor, intente más tarde." });
   }
 };
+
 
 // Controlador para habilitar un libro
 const habilitarLibro = async (req, res) => {
   const { id } = req.params; // ID del libro a habilitar
+
+  // Verificar los permisos del usuario
+  const permisos = Array.isArray(req.user.permiso) ? req.user.permiso : [];
+
+  // Verificar si el usuario tiene el permiso adecuado para habilitar libros
+  if (!permisos.includes("habilitar_libro") && !permisos.includes("admin")) {
+    return res.status(403).json({
+      message: "No tienes permisos para habilitar este libro.",
+    });
+  }
 
   try {
     // Delegar la lógica de habilitación del libro a la acción correspondiente
@@ -160,9 +195,7 @@ const habilitarLibro = async (req, res) => {
     res.status(200).json({ message: "Libro habilitado con éxito" });
   } catch (error) {
     console.error("Error al habilitar el libro:", error);
-    res
-      .status(500)
-      .json({ message: "Error en el servidor, intente más tarde." });
+    res.status(500).json({ message: "Error en el servidor, intente más tarde." });
   }
 };
 
@@ -204,6 +237,16 @@ const reservarLibro = async (req, res) => {
 const entregarLibro = async (req, res) => {
   const { id } = req.params; // ID de la reserva a entregar
 
+  // Verificar los permisos del usuario
+  const permisos = Array.isArray(req.user.permiso) ? req.user.permiso : [];
+
+  // Verificar si el usuario tiene el permiso adecuado para entregar libros
+  if (!permisos.includes("entregar_libro") && !permisos.includes("admin")) {
+    return res.status(403).json({
+      message: "No tienes permisos para entregar este libro.",
+    });
+  }
+
   try {
     // Delegar la lógica de entrega del libro a la acción correspondiente
     const result = await entregarLibroAction(id);
@@ -217,9 +260,7 @@ const entregarLibro = async (req, res) => {
     });
   } catch (error) {
     console.error("Error al entregar el libro:", error);
-    res
-      .status(500)
-      .json({ message: "Error en el servidor, intente más tarde." });
+    res.status(500).json({ message: "Error en el servidor, intente más tarde." });
   }
 };
 

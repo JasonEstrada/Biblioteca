@@ -11,45 +11,24 @@ const {
   entregarLibro,
 } = require("../controllers/libroController");
 const {
-  verificarPermiso,
   verificarToken,
 } = require("../middleware/authMiddleware");
 
 // Ruta para crear un libro (solo para usuarios con permisos 'admin')
-router.post("/crear", verificarPermiso("admin"), crearLibro);
+router.post("/crear", verificarToken, crearLibro);
 
 router.get("/buscar", buscarLibro);
 
-router.put(
-  "/actualizar/:id",
-  verificarToken,
-  verificarPermiso("admin"),
-  actualizarLibro
-);
+router.put("/actualizar/:id", verificarToken, actualizarLibro);
 
-router.delete(
-  "/inhabilitar/:id",
-  verificarToken,
-  verificarPermiso("admin"),
-  inhabilitarLibro
-);
+router.delete("/inhabilitar/:id", verificarToken, inhabilitarLibro);
 
-router.put(
-  "/habilitar/:id",
-  verificarToken,
-  verificarPermiso("admin"),
-  habilitarLibro
-);
+router.put("/habilitar/:id", verificarToken,  habilitarLibro);
 
 router.post("/reservar/:id", verificarToken, reservarLibro);
 
 router.get("/reservas/:id", verificarToken, obtenerHistorialReservas);
 
-router.put(
-  "/entregar/:id",
-  verificarToken,
-  verificarPermiso("admin"),
-  entregarLibro
-);
+router.put("/entregar/:id", verificarToken, entregarLibro);
 
 module.exports = router;

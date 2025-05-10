@@ -1,4 +1,4 @@
-const { crearUsuarioConPermiso } = require("../actions/usuarios/crearUsuario");
+const { crearUsuarioAction } = require("../actions/usuarios/crearUsuario");
 const { obtenerUsuariosAction } = require("../actions/usuarios/obtenerUsuarios");
 const { actualizarUsuarioAction } = require("../actions/usuarios/actualizarUsuario");
 const { inhabilitarUsuarioAction } = require("../actions/usuarios/inhabilitarUsuario");
@@ -8,11 +8,7 @@ const { loginUsuarioAction } = require("../actions/usuarios/authAction");
 
 // Controladores de usuarios
 const crearUsuario = (req, res) => {
-  crearUsuarioConPermiso(req, res, "usuario");
-};
-
-const crearUsuarioAdmin = (req, res) => {
-  crearUsuarioConPermiso(req, res, "admin");
+  crearUsuarioAction(req, res);
 };
 
 // Función para manejar el login
@@ -77,11 +73,12 @@ const actualizarUsuario = async (req, res) => {
   const { nombre, email, contraseña, permiso } = req.body;
   const usuarioId = req.user.id; // ID del usuario autenticado (de la decodificación del JWT)
 
-  // Verificar si el usuario está intentando modificar sus propios datos o es un admin
-  if (id != usuarioId && req.user.permiso !== "admin") {
-    return res
-      .status(403)
-      .json({ message: "No tienes permisos para modificar este usuario." });
+  // Verificar si el usuario tiene permiso para actualizar un usuario
+  // Solo se puede actualizar el propio perfil o un perfil si el usuario tiene permisos de admin
+  if (id != usuarioId && !req.user.permiso.includes("actualizar_usuario") && !req.user.permiso.includes("admin")) {
+    return res.status(403).json({
+      message: "No tienes permisos para modificar este usuario.",
+    });
   }
 
   try {
@@ -102,22 +99,23 @@ const actualizarUsuario = async (req, res) => {
     res.status(200).json({ message: "Usuario actualizado con éxito" });
   } catch (error) {
     console.error("Error al actualizar el usuario:", error);
-    res
-      .status(500)
-      .json({ message: "Error en el servidor, intente más tarde." });
+    res.status(500).json({ message: "Error en el servidor, intente más tarde." });
   }
 };
+
 
 // Controlador para inhabilitar un usuario
 const inhabilitarUsuario = async (req, res) => {
   const { id } = req.params; // ID del usuario a inhabilitar
   const usuarioId = req.user.id; // ID del usuario autenticado (de la decodificación del JWT)
+  const permisos = Array.isArray(req.user.permiso) ? req.user.permiso : [];
 
   // Verificar si el usuario está intentando inhabilitar su propio perfil o es un admin
-  if (id != usuarioId && req.user.permiso !== "admin") {
-    return res
-      .status(403)
-      .json({ message: "No tienes permisos para inhabilitar este usuario." });
+  // Verificar si el usuario tiene permiso para inhabilitar un usuario
+  if (id != usuarioId && !permisos.includes("inhabilitar_usuario") && !permisos.includes("admin")) {
+    return res.status(403).json({
+      message: "No tienes permisos para inhabilitar este usuario.",
+    });
   }
 
   try {
@@ -141,6 +139,16 @@ const inhabilitarUsuario = async (req, res) => {
 const habilitarUsuario = async (req, res) => {
   const { id } = req.params; // ID del usuario a habilitar
 
+  // Verificar los permisos del usuario
+  const permisos = Array.isArray(req.user.permiso) ? req.user.permiso : [];
+
+  // Verificar si el usuario tiene permisos para habilitar un usuario
+  if (!permisos.includes("habilitar_usuario") && !permisos.includes("admin")) {
+    return res.status(403).json({
+      message: "No tienes permisos para habilitar este usuario.",
+    });
+  }
+
   try {
     // Delegar la lógica de habilitación de usuario a la acción correspondiente
     const result = await habilitarUsuarioAction(id);
@@ -152,9 +160,7 @@ const habilitarUsuario = async (req, res) => {
     res.status(200).json({ message: "Usuario habilitado con éxito" });
   } catch (error) {
     console.error("Error al habilitar usuario:", error);
-    res
-      .status(500)
-      .json({ message: "Error en el servidor, intente más tarde." });
+    res.status(500).json({ message: "Error en el servidor, intente más tarde." });
   }
 };
 
@@ -163,8 +169,10 @@ const obtenerHistorialReservasUsuario = async (req, res) => {
   const usuarioId = req.user.id; // ID del usuario autenticado (de la decodificación del JWT)
   const idUsuarioConsulta = req.params.id || usuarioId; // Si no se pasa el ID, se usa el ID del usuario autenticado
 
+  const permisos = Array.isArray(req.user.permiso) ? req.user.permiso : [];
+
   // Verificar si el usuario tiene permisos para consultar el historial de otro usuario (si no es administrador)
-  if (idUsuarioConsulta !== usuarioId && req.user.permiso !== "admin") {
+  if (idUsuarioConsulta !== usuarioId && !permisos.includes("ver_historial_usuario") && !permisos.includes("admin")) {
     return res
       .status(403)
       .json({
@@ -193,7 +201,6 @@ const obtenerHistorialReservasUsuario = async (req, res) => {
 
 module.exports = {
   crearUsuario,
-  crearUsuarioAdmin,
   loginUsuario,
   obtenerUsuarios,
   actualizarUsuario,

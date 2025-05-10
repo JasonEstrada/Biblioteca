@@ -10,6 +10,8 @@ const actualizarUsuarioAction = async (
   permiso,
   usuarioPermiso
 ) => {
+
+  const permisos = Array.isArray(usuarioPermiso) ? usuarioPermiso : [];
   // Primero, verificamos si el usuario existe
   try {
     const [result] = await db
@@ -33,7 +35,7 @@ const actualizarUsuarioAction = async (
 
     // Solo agregamos a la consulta los campos que fueron proporcionados
     if (nombre) {
-      query += " nombre = ?,";
+      query += " nombre = ?,"; 
       params.push(nombre);
     }
 
@@ -51,7 +53,7 @@ const actualizarUsuarioAction = async (
     }
 
     if (email) {
-      query += " email = ?,";
+      query += " email = ?,"; 
       params.push(email);
     }
 
@@ -68,7 +70,7 @@ const actualizarUsuarioAction = async (
 
         // Agregar la contraseña cifrada a la consulta
         params.push(hashedPassword);
-        query += " contraseña = ?,";
+        query += " contraseña = ?,"; 
       } catch (error) {
         return {
           error: true,
@@ -78,20 +80,24 @@ const actualizarUsuarioAction = async (
       }
     }
 
-    if (permiso && usuarioPermiso === "admin") {
-      query += " permiso = ?,";
-      params.push(permiso);
-    } else if (permiso) {
-      return {
-        error: true,
-        status: 403,
-        message:
-          "Solo el administrador puede modificar los permisos de un usuario.",
-      };
+    // Verificación y asignación de permisos como array
+    if (permiso) {
+      // Permitir que un usuario con permiso admin o con permiso "actualizar_usuario" actualice permisos
+      if (permisos.includes("admin") || permisos.includes("actualizar_usuario")) {
+        // Aquí convertimos `permiso` a un array si es necesario (si ya es un array no cambiará)
+        query += " permiso = ?,"; 
+        params.push(JSON.stringify(permiso)); // Convertimos el permiso a JSON
+      } else {
+        return {
+          error: true,
+          status: 403,
+          message: "Solo el administrador puede modificar los permisos de un usuario.",
+        };
+      }
     }
 
     // Eliminar la última coma extra en la consulta
-    query = query.slice(0, -1);
+    query = query.slice(0, -1);  // Elimina la coma extra si existe
 
     // Agregar la condición para actualizar el usuario con el ID especificado
     query += " WHERE id = ?";

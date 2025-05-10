@@ -2,7 +2,7 @@ const { db } = require("../../models/dbModel"); // Usar la conexión a la base d
 const bcrypt = require("bcryptjs");
 
 // Acción para crear un usuario
-const crearUsuarioConPermiso = async (req, res, permiso) => {
+const crearUsuarioAction = async (req, res) => {
   const { nombre, email, contraseña } = req.body;
 
   // Validar que todos los campos estén presentes
@@ -49,14 +49,15 @@ const crearUsuarioConPermiso = async (req, res, permiso) => {
         // Paso 3: Crear el Hash con el Salt y el Pepper
         const hashedPassword = await bcrypt.hash(pepperedPassword, salt);
 
-        // Paso 4: Insertar el nuevo usuario en la base de datos con el permiso proporcionado
+        // Paso 4: Insertar el nuevo usuario en la base de datos
         const query =
-          "INSERT INTO usuarios (nombre, email, contraseña, salt, permiso) VALUES (?, ?, ?, ?, ?)";
+          "INSERT INTO usuarios (nombre, email, contraseña, salt) VALUES (?, ?, ?, ?)";
         db.query(
           query,
-          [nombre, email, hashedPassword, salt, permiso],
+          [nombre, email, hashedPassword, salt],
           (err, result) => {
             if (err) {
+              console.error("Error al insertar el usuario:", err);
               return res
                 .status(500)
                 .json({ message: "Error al crear el usuario" });
@@ -76,4 +77,4 @@ const crearUsuarioConPermiso = async (req, res, permiso) => {
   );
 };
 
-module.exports = { crearUsuarioConPermiso };
+module.exports = { crearUsuarioAction};
