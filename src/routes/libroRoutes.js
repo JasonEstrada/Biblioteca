@@ -14,7 +14,6 @@ const {
   verificarToken,
 } = require("../middleware/authMiddleware");
 
-// Ruta para crear un libro (solo para usuarios con permisos 'admin')
 router.post("/crear", verificarToken, crearLibro);
 
 router.get("/buscar", buscarLibro);
