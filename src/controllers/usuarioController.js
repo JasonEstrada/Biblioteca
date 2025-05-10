@@ -138,6 +138,17 @@ const inhabilitarUsuario = async (req, res) => {
 // Controlador para habilitar un usuario
 const habilitarUsuario = async (req, res) => {
   const { id } = req.params; // ID del usuario a habilitar
+  const usuarioId = req.user.id; // ID del usuario autenticado (de la decodificación del JWT)
+
+  // Verificar los permisos del usuario
+  const permisos = Array.isArray(req.user.permiso) ? req.user.permiso : [];
+
+  // Verificar si el usuario tiene permisos para habilitar un usuario
+  if (!permisos.includes("habilitar_usuario") && !permisos.includes("admin")) {
+    return res.status(403).json({
+      message: "No tienes permisos para habilitar este usuario.",
+    });
+  }
 
   // Verificar los permisos del usuario
   const permisos = Array.isArray(req.user.permiso) ? req.user.permiso : [];
